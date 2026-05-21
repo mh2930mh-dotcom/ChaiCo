@@ -13,7 +13,6 @@ export default function WishlistScreen() {
   const [userId, setUserId] = useState<string | null>(null)
   const addToCart = useCartStore((state) => state.addToCart)
   const currency = useSettingsStore((state) => state.currency)
-  const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
 

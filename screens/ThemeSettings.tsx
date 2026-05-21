@@ -9,7 +9,6 @@ export default function ThemeSettings({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backBtn, { color: colors.primary }]}>← Back</Text>
@@ -17,7 +16,6 @@ export default function ThemeSettings({ navigation }: any) {
         <Text style={[styles.title, { color: colors.primary }]}>Theme Settings</Text>
       </View>
 
-      {/* Theme Section */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme</Text>
 

@@ -15,7 +15,6 @@ export default function OrderHistoryScreen({ navigation }: any) {
   const [hasMore, setHasMore] = useState(true)
   const PAGE_SIZE = 5
 
-  const language = useSettingsStore((state) => state.language)
 
   useEffect(() => {
     getOrders(0)
@@ -83,7 +82,6 @@ export default function OrderHistoryScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backBtn}>← Back</Text>
@@ -94,9 +92,20 @@ export default function OrderHistoryScreen({ navigation }: any) {
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id.toString()}
+        ListFooterComponent={
+          hasMore ? (
+            <TouchableOpacity
+              style={styles.loadMoreBtn}
+              onPress={loadMore}
+            >
+              <Text style={styles.loadMoreText}>{t('orderHistoryLoadMore')}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.noMoreText}>{t('orderHistoryNoMore')}</Text>
+          )
+        }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            {/* Order ID + Date */}
             <View style={styles.cardHeader}>
               <Text style={styles.orderId}>{t('orderHistoryOrderNumber')} {item.id}</Text>
               <Text style={styles.date}>
@@ -104,7 +113,6 @@ export default function OrderHistoryScreen({ navigation }: any) {
               </Text>
             </View>
 
-            {/* Items */}
             {item.items.map((product: any, index: number) => (
               <View key={index} style={styles.itemRow}>
                 <Text style={styles.itemName}>
@@ -116,7 +124,6 @@ export default function OrderHistoryScreen({ navigation }: any) {
               </View>
             ))}
 
-            {/* Total + Status */}
             <View style={styles.cardFooter}>
               <Text style={styles.total}>{t('orderHistoryTotal')}: ${item.total.toFixed(2)}</Text>
               <View style={[
@@ -129,18 +136,6 @@ export default function OrderHistoryScreen({ navigation }: any) {
           </View>
         )}
       />
-      ListFooterComponent={
-        hasMore ? (
-          <TouchableOpacity
-            style={styles.loadMoreBtn}
-            onPress={loadMore}
-          >
-            <Text style={styles.loadMoreText}>{t('orderHistoryLoadMore')}</Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={styles.noMoreText}>{t('orderHistoryNoMore')}</Text>
-        )
-      }
     </View>
   )
 }

@@ -79,7 +79,6 @@ export default function StoreLocatorScreen({ navigation }: any) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
 
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backBtn, { color: colors.primary }]}>← Back</Text>
@@ -92,7 +91,6 @@ export default function StoreLocatorScreen({ navigation }: any) {
         </Text>
       </View>
 
-      {/* Map */}
       <MapView
         style={styles.map}
         provider={PROVIDER_DEFAULT}
@@ -130,7 +128,6 @@ export default function StoreLocatorScreen({ navigation }: any) {
         ))}
       </MapView>
 
-      {/* Store List */}
       <View style={[styles.storeList, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.storeListTitle, { color: colors.text }]}>
           Nearby Stores

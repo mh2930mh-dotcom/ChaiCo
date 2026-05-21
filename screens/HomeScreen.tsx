@@ -1,142 +1,75 @@
-/**
- * Home Screen Component
- * 
- * Displays products with features:
- * - Dynamic category filtering
- * - Wishlist management (buyers only)
- * - Cart integration with haptic feedback
- * - Offline support with caching
- * - Battery optimization (pauses sync when low)
- * - Real-time product updates (when battery allows)
- * - Vendor dashboard for managing products
- */
-
+// Main products page
 import { useState, useEffect } from 'react'
 import { StyleSheet, View, FlatList, Text, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
 import * as Battery from 'expo-battery'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-// Services & Utilities
 import { supabase } from '../lib/supabase'
 import { formatPrice } from '../lib/currency'
 import { t } from '../lib/i18n'
 import { lightTheme, darkTheme } from '../lib/theme'
 import { Ionicons } from '@expo/vector-icons'
-
-// State Management
 import useCartStore from '../store/cartStore'
 import useSettingsStore from '../store/settingsStore'
-
-// Product categories available for filtering
 const categories = ['All', 'Green Tea', 'Black Tea', 'Herbal Tea']
 
-/**
- * Home Screen Component
- * Shows product listings with category filtering and buyer/vendor functionality
- * 
- * @param {object} props - Component props
- * @param {string|null} props.role - User role ('buyer' or 'vendor')
- * @returns {JSX.Element} Home screen view
- */
 export default function HomeScreen({ role }: { role?: string | null }) {
-  // State: Product data
   const [products, setProducts] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [wishlistedIds, setWishlistedIds] = useState<number[]>([])
   const [isLowBattery, setIsLowBattery] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
-
-  // Store selectors
   const addToCart = useCartStore((state) => state.addToCart)
   const currency = useSettingsStore((state) => state.currency)
-  const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
 
-  /**
-   * Effect: Initialize products, wishlist, battery monitoring, and realtime sync
-   * Sets up:
-   * - Product loading and caching
-   * - Wishlist loading
-   * - Battery level monitoring
-   * - Real-time product subscription (when battery > 20%)
-   * - Proper cleanup on unmount
-   */
-  useEffect(() => {
-    // Load initial data
+    useEffect(() => {
     getProducts('All')
     loadWishlistedIds()
     checkBattery()
-
-    // Monitor battery level
     const batterySub = Battery.addBatteryLevelListener(({ batteryLevel }) => {
       const low = batteryLevel <= 0.2
       setIsLowBattery(low)
-      console.log(`🔋 Battery: ${Math.round(batteryLevel * 100)}% - Sync ${low ? 'PAUSED' : 'ACTIVE'}`)
     })
-
-    // Setup realtime sync if battery is sufficient
     let channel: any = null
 
     Battery.getBatteryLevelAsync().then((level) => {
       if (level > 0.2) {
-        // Subscribe to realtime product changes
         channel = supabase
           .channel(`products-changes-${Date.now()}`)
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'products' },
             (payload) => {
-              console.log('📡 Product change received:', payload.eventType)
               getProducts(selectedCategory)
             }
           )
           .subscribe()
-        console.log('✅ Realtime sync started')
       } else {
-        console.log('⏸ Low battery - Realtime sync paused')
       }
     })
-
-    // Cleanup subscriptions on unmount
     return () => {
       batterySub.remove()
       if (channel) channel.unsubscribe()
     }
   }, [])
 
-  /**
-   * Check current battery level
-   * @async
-   */
-  async function checkBattery() {
+    async function checkBattery() {
     const level = await Battery.getBatteryLevelAsync()
     setIsLowBattery(level <= 0.2)
   }
 
-  /**
-   * Fetch products from Supabase or load from cache on failure
-   * Implements offline-first pattern with timeout for offline detection
-   * 
-   * @param {string} category - Product category to filter ('All' for all products)
-   * @async
-   */
-  async function getProducts(category: string = 'All') {
+    async function getProducts(category: string = 'All') {
     try {
-      // Build query
       let query = supabase.from('products').select()
       if (category !== 'All') {
         query = query.eq('category', category)
       }
-
-      // Set 5 second timeout to detect offline state
       const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Network timeout')), 5000)
       )
-
-      // Race between query and timeout
       const { data, error } = await Promise.race([query, timeout]) as any
 
       if (error) throw error
@@ -144,36 +77,24 @@ export default function HomeScreen({ role }: { role?: string | null }) {
       if (data) {
         setProducts(data)
         setIsOffline(false)
-        
-        // Cache products for offline use
         await AsyncStorage.setItem(
           `products_cache_${category}`,
           JSON.stringify(data)
         )
-        console.log(`✅ ${data.length} products loaded and cached`)
       }
     } catch (err) {
-      // Load from cache if network error
-      console.log('⚠️ Network error, loading from cache...')
       try {
         const cached = await AsyncStorage.getItem(`products_cache_${category}`)
         if (cached) {
           setProducts(JSON.parse(cached))
           setIsOffline(true)
-          console.log('📦 Loaded from local cache')
         }
       } catch (cacheErr) {
-        console.error('❌ Cache error:', cacheErr)
       }
     }
   }
 
-  /**
-   * Load wishlist product IDs for current user
-   * Used to show/hide heart icons on products
-   * @async
-   */
-  async function loadWishlistedIds() {
+    async function loadWishlistedIds() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -187,24 +108,15 @@ export default function HomeScreen({ role }: { role?: string | null }) {
         setWishlistedIds(data.map((w) => w.product_id))
       }
     } catch (err) {
-      console.error('❌ Error loading wishlist:', err)
     }
   }
 
-  /**
-   * Add or remove product from wishlist
-   * Toggles wishlist status for a product
-   * 
-   * @param {number} productId - ID of product to wishlist
-   * @async
-   */
-  async function addToWishlist(productId: number) {
+    async function addToWishlist(productId: number) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       if (wishlistedIds.includes(productId)) {
-        // Remove from wishlist
         await supabase
           .from('wishlist')
           .delete()
@@ -212,7 +124,6 @@ export default function HomeScreen({ role }: { role?: string | null }) {
           .eq('product_id', productId)
         setWishlistedIds(wishlistedIds.filter((id) => id !== productId))
       } else {
-        // Add to wishlist
         const { error } = await supabase
           .from('wishlist')
           .insert({ user_id: user.id, product_id: productId })
@@ -221,18 +132,10 @@ export default function HomeScreen({ role }: { role?: string | null }) {
         }
       }
     } catch (err) {
-      console.error('❌ Error updating wishlist:', err)
     }
   }
 
-  /**
-   * Delete product (vendor only)
-   * Shows confirmation alert before deletion
-   * 
-   * @param {number} productId - ID of product to delete
-   * @async
-   */
-  async function deleteProduct(productId: number) {
+    async function deleteProduct(productId: number) {
     Alert.alert(
       'Delete Product',
       'Are you sure you want to delete this product?',
@@ -261,10 +164,8 @@ export default function HomeScreen({ role }: { role?: string | null }) {
       ]
     )
   }
-  // Render: Main screen
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header Section */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.welcome, { color: colors.primary }]}>
           {role === 'vendor' ? 'Vendor Dashboard' : t('welcome')}
@@ -276,7 +177,6 @@ export default function HomeScreen({ role }: { role?: string | null }) {
         )}
       </View>
 
-      {/* Offline Warning Banner */}
       {isOffline && (
         <View style={[styles.offlineBanner, { backgroundColor: colors.filterBtn, borderColor: colors.border }]}> 
           <Text style={[styles.offlineBannerText, { color: colors.text }]}> 
@@ -285,7 +185,6 @@ export default function HomeScreen({ role }: { role?: string | null }) {
         </View>
       )}
 
-      {/* Category Filter Buttons */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -316,20 +215,17 @@ export default function HomeScreen({ role }: { role?: string | null }) {
         ))}
       </ScrollView>
 
-      {/* Product List */}
       <FlatList
         data={products}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {/* Product Image */}
             <Image
               source={{ uri: item.image_url }}
               style={styles.image}
               contentFit="cover"
             />
 
-            {/* Wishlist Heart (buyers only) */}
             {role !== 'vendor' && (
               <TouchableOpacity
                 style={styles.heartBtn}
@@ -343,7 +239,6 @@ export default function HomeScreen({ role }: { role?: string | null }) {
               </TouchableOpacity>
             )}
 
-            {/* Product Information */}
             <View style={styles.info}>
               <Text style={[styles.name, { color: colors.text }]}>
                 {item.name}
@@ -370,9 +265,7 @@ export default function HomeScreen({ role }: { role?: string | null }) {
                 }
               </Text>
 
-              {/* Action Buttons - Vendor or Buyer */}
               {role === 'vendor' ? (
-                // Vendor: Edit and Delete buttons
                 <View style={styles.vendorButtons}>
                   <TouchableOpacity
                     style={[styles.editBtn, { backgroundColor: colors.primary }]}
@@ -388,14 +281,12 @@ export default function HomeScreen({ role }: { role?: string | null }) {
                   </TouchableOpacity>
                 </View>
               ) : (
-                // Buyer: Add to Cart button
                 <TouchableOpacity
                   style={[
                     styles.addToCartBtn,
                     { backgroundColor: item.stock === 0 ? colors.border : colors.success }
                   ]}
                   onPress={() => {
-                    // Haptic feedback for user action
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                     addToCart({
                       id: item.id,
@@ -419,18 +310,12 @@ export default function HomeScreen({ role }: { role?: string | null }) {
     </View>
   )
 }
-/**
- * Styles for Home Screen
- */
 const styles = StyleSheet.create({
-  // Container & Layout
   container: {
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
   },
-
-  // Header Section
   header: {
     paddingBottom: 12,
     borderBottomWidth: 1,
@@ -446,8 +331,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
   },
-
-  // Offline Banner
   offlineBanner: {
     padding: 10,
     alignItems: 'center',
@@ -459,8 +342,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
   },
-
-  // Product Card
   card: {
     borderRadius: 14,
     marginBottom: 18,
@@ -476,8 +357,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
   },
-
-  // Wishlist Heart Button
   heartBtn: {
     position: 'absolute',
     top: 8,
@@ -492,8 +371,6 @@ const styles = StyleSheet.create({
   heartText: {
     fontSize: 18,
   },
-
-  // Product Information
   info: {
     padding: 12,
   },
@@ -514,8 +391,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
-  
-  // Stock Status
   stock: {
     fontSize: 13,
     color: '#038956',
@@ -525,8 +400,6 @@ const styles = StyleSheet.create({
   outOfStock: {
     color: '#D3968C',
   },
-
-  // Add to Cart Button (Buyer)
   addToCartBtn: {
     padding: 10,
     borderRadius: 8,
@@ -541,8 +414,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-
-  // Vendor Buttons (Edit/Delete)
   vendorButtons: {
     flexDirection: 'row',
     marginTop: 8,
@@ -570,8 +441,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-
-  // Category Filter Buttons
   filterBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,

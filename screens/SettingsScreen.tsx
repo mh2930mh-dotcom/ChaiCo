@@ -28,7 +28,6 @@ export default function SettingsScreen({ navigation }: any) {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
 
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backBtn, { color: colors.primary }]}>← Back</Text>
@@ -36,7 +35,6 @@ export default function SettingsScreen({ navigation }: any) {
         <Text style={[styles.title, { color: colors.primary }]}>Language & Currency 🌍</Text>
       </View>
 
-      {/* Currency Section */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Currency</Text>
         {currencies.map((item) => (
@@ -63,7 +61,6 @@ export default function SettingsScreen({ navigation }: any) {
         ))}
       </View>
 
-      {/* Language Section */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Language</Text>
         {languages.map((item) => (

@@ -1,3 +1,4 @@
+// Vendor orders page
 import { useState, useEffect } from 'react'
 import {
   View, Text, FlatList,
@@ -15,12 +16,9 @@ export default function VendorOrdersScreen() {
 
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
-  const language = useSettingsStore((state) => state.language)
 
   useEffect(() => {
     getOrders()
-
-    // Realtime updates for new orders
     const channel = supabase
       .channel(`orders-changes-${Date.now()}`)
       .on(
@@ -90,7 +88,6 @@ export default function VendorOrdersScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
 
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.primary }]}>{t('vendorOrders.title')}</Text>
         <Text style={[styles.count, { color: colors.subtext }]}>
@@ -104,7 +101,6 @@ export default function VendorOrdersScreen() {
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
-            {/* Order Header */}
             <View style={styles.cardHeader}>
               <Text style={[styles.orderId, { color: colors.text }]}>
                 {t('vendorOrders.orderNumber')} {item.id}
@@ -114,7 +110,6 @@ export default function VendorOrdersScreen() {
               </Text>
             </View>
 
-            {/* Items */}
             {item.items.map((product: any, index: number) => (
               <View key={index} style={styles.itemRow}>
                 <Text style={[styles.itemName, { color: colors.text }]}>
@@ -126,7 +121,6 @@ export default function VendorOrdersScreen() {
               </View>
             ))}
 
-            {/* Total + Status */}
             <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
               <Text style={[styles.total, { color: colors.text }]}>
                 {t('vendorOrders.total')}: {formatPrice(item.total)}
@@ -136,7 +130,6 @@ export default function VendorOrdersScreen() {
               </View>
             </View>
 
-            {/* Update Status Buttons */}
             <View style={styles.statusButtons}>
               {item.status === 'pending' && (
                 <>

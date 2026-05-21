@@ -5,7 +5,6 @@ import useSettingsStore from '../store/settingsStore'
 import { lightTheme, darkTheme } from '../lib/theme'
 
 export default function ProfileScreen({ navigation }: any) {
-  const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
   const setTheme = useSettingsStore((state) => state.setTheme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
@@ -22,7 +21,6 @@ export default function ProfileScreen({ navigation }: any) {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.primary }]}>{t('profile')}</Text>
 
-      {/* Theme (Light / Dark mode) */}
       <TouchableOpacity
         style={[styles.btn, { backgroundColor: colors.card, borderColor: colors.border }]}
         onPress={toggleTheme}

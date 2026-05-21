@@ -1,44 +1,18 @@
-/**
- * Cart Screen Component
- * 
- * Displays shopping cart with:
- * - List of products in cart
- * - Quantity adjustment controls
- * - Item removal
- * - Total price calculation
- * - Checkout navigation
- */
-
+// Cart page for the shop app
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
 import { Image } from 'expo-image'
 import * as Haptics from 'expo-haptics'
-
-// Services & Utilities
 import { formatPrice } from '../lib/currency'
 import { t } from '../lib/i18n'
 import { lightTheme, darkTheme } from '../lib/theme'
-
-// State Management
 import useCartStore from '../store/cartStore'
 import useSettingsStore from '../store/settingsStore'
 
-/**
- * Cart Screen Component
- * @param {object} props - Component props
- * @param {any} props.navigation - Navigation object from React Navigation
- * @returns {JSX.Element} Cart UI
- */
 export default function CartScreen({ navigation }: any) {
-  // Get cart actions and state
   const { items, removeFromCart, increaseQuantity, decreaseQuantity, getTotalPrice, clearCart } = useCartStore()
-  
-  // Get user settings
   const currency = useSettingsStore((state) => state.currency)
-  const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
-
-  // Render: Empty cart state
   if (items.length === 0) {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
@@ -51,11 +25,8 @@ export default function CartScreen({ navigation }: any) {
       </View>
     )
   }
-
-  // Render: Cart with items
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.primary }]}>
           {t('cart')}
@@ -72,20 +43,17 @@ export default function CartScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* Cart Items List */}
       <FlatList
         data={items}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {/* Product Image */}
             <Image
               source={{ uri: item.image_url }}
               style={styles.image}
               contentFit="cover"
             />
             
-            {/* Product Details */}
             <View style={styles.info}>
               <Text style={[styles.name, { color: colors.text }]}>
                 {item.name}
@@ -95,9 +63,7 @@ export default function CartScreen({ navigation }: any) {
                 {formatPrice(item.price)}
               </Text>
 
-              {/* Quantity Controls */}
               <View style={styles.quantityRow}>
-                {/* Decrease Button */}
                 <TouchableOpacity
                   style={[styles.qtyBtn, { backgroundColor: colors.success }]}
                   onPress={() => {
@@ -108,12 +74,10 @@ export default function CartScreen({ navigation }: any) {
                   <Text style={styles.qtyBtnText}>−</Text>
                 </TouchableOpacity>
 
-                {/* Quantity Display */}
                 <Text style={[styles.qtyText, { color: colors.text }]}>
                   {item.quantity}
                 </Text>
 
-                {/* Increase Button */}
                 <TouchableOpacity
                   style={[styles.qtyBtn, { backgroundColor: colors.success }]}
                   onPress={() => {
@@ -124,7 +88,6 @@ export default function CartScreen({ navigation }: any) {
                   <Text style={styles.qtyBtnText}>+</Text>
                 </TouchableOpacity>
 
-                {/* Remove Button */}
                 <TouchableOpacity
                   style={styles.removeBtn}
                   onPress={() => {
@@ -138,7 +101,6 @@ export default function CartScreen({ navigation }: any) {
                 </TouchableOpacity>
               </View>
 
-              {/* Subtotal */}
               <Text style={[styles.subtotal, { color: colors.subtext }]}>
                 {t('subtotal')}: {formatPrice(item.price * item.quantity)}
               </Text>
@@ -147,7 +109,6 @@ export default function CartScreen({ navigation }: any) {
         )}
       />
 
-      {/* Footer with Total and Checkout */}
       <View style={[styles.footer, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.total, { color: colors.primary }]}>
           {t('total')}: {formatPrice(getTotalPrice())}
@@ -168,18 +129,12 @@ export default function CartScreen({ navigation }: any) {
   )
 }
 
-/**
- * Styles for Cart Screen
- */
 const styles = StyleSheet.create({
-  // Main Container
   container: {
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
   },
-
-  // Empty State
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -193,8 +148,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 8,
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -211,8 +164,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
-  // Cart Item Card
   card: {
     borderRadius: 12,
     marginBottom: 12,
@@ -237,8 +188,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 2,
   },
-
-  // Quantity Controls
   quantityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,8 +219,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-
-  // Pricing
   subtotal: {
     fontSize: 13,
     marginTop: 4,
@@ -281,8 +228,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
   },
-
-  // Checkout
   checkoutBtn: {
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -293,8 +238,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
-  // Footer
   footer: {
     padding: 16,
     borderRadius: 12,

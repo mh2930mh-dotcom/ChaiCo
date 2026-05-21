@@ -1,3 +1,4 @@
+// Checkout page and receipt generation
 import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -22,7 +23,6 @@ export default function CheckoutScreen({ navigation }: any) {
 
   const { items, getTotalPrice, clearCart } = useCartStore()
   const currency = useSettingsStore((state) => state.currency)
-  const language = useSettingsStore((state) => state.language)
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
 
@@ -105,16 +105,12 @@ export default function CheckoutScreen({ navigation }: any) {
       setLoading(false)
       return
     }
-
-    // Save items before clearing cart
     const orderItems = [...items]
     const orderTotal = getTotalPrice()
 
     clearCart()
     setLoading(false)
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-
-    // Send push notification
     try {
       await sendLocalNotification(
         'Order Placed!',
@@ -123,8 +119,6 @@ export default function CheckoutScreen({ navigation }: any) {
     } catch (e) {
       console.log('Notification error:', e)
     }
-
-    // Generate PDF receipt
     try {
       await generateReceipt(orderItems, orderTotal)
     } catch (e) {

@@ -16,7 +16,6 @@ export default function ScanScreen() {
   const addToCart = useCartStore((state) => state.addToCart)
   const theme = useSettingsStore((state) => state.theme)
   const colors = theme === 'dark' ? darkTheme : lightTheme
-  const language = useSettingsStore((state) => state.language)
 
   if (!permission) {
     return <View />
@@ -42,7 +41,7 @@ export default function ScanScreen() {
 
   async function handleBarCodeScanned({ data }: { data: string }) {
     if (scanned) return
-    scanned(true)
+    setScanned(true)
 
     const { data: products, error } = await supabase
       .from('products')
@@ -78,7 +77,6 @@ export default function ScanScreen() {
             {product.stock === 0 ? t('outOfStock') : `${t('inStock')}: ${product.stock}`}
           </Text>
 
-          {/* Add to Cart Button */}
           <TouchableOpacity
             style={[
               styles.addToCartBtn,
@@ -159,7 +157,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 350,
     borderRadius: 12,
-    overflow: '',
+    overflow: 'hidden',
   },
   card: {
     borderRadius: 12,

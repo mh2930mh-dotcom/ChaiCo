@@ -1,3 +1,4 @@
+// Vendor product form
 import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -63,17 +64,11 @@ export default function VendorAddProductScreen({ navigation }: any) {
 
   async function uploadImage(uri: string): Promise<string> {
     const fileName = `product_${Date.now()}.jpg`
-
-    console.log('Starting upload for:', fileName)
-
-    // Read file as base64
     const base64 = await FileSystem.readAsStringAsync(uri, {
       encoding: 'base64',
     })
 
     console.log('Base64 length:', base64.length)
-
-    // Upload to Supabase Storage
     const { data, error } = await supabase.storage
       .from('vendor_products')
       .upload(fileName, decode(base64), {
@@ -82,19 +77,11 @@ export default function VendorAddProductScreen({ navigation }: any) {
       })
 
     if (error) {
-      console.log('Upload error:', error)
       throw error
     }
-
-    console.log('Upload success:', data)
-
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('vendor_products')
       .getPublicUrl(fileName)
-
-    console.log('🔗 Public URL:', publicUrl)
-
     return publicUrl
   }
 
@@ -112,11 +99,7 @@ export default function VendorAddProductScreen({ navigation }: any) {
     setLoading(true)
 
     try {
-      // Upload image first
-      console.log('Starting product upload...')
       const imageUrl = await uploadImage(image)
-
-      // Save product to DB
       const { error } = await supabase
         .from('products')
         .insert({
@@ -152,7 +135,6 @@ export default function VendorAddProductScreen({ navigation }: any) {
     >
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
 
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={[styles.backBtn, { color: colors.primary }]}>← Back</Text>
@@ -160,7 +142,6 @@ export default function VendorAddProductScreen({ navigation }: any) {
           <Text style={[styles.title, { color: colors.primary }]}>Add Product</Text>
         </View>
 
-        {/* Image Picker */}
         <View style={[styles.imageSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {image ? (
             <Image source={{ uri: image }} style={styles.previewImage} />
@@ -189,7 +170,6 @@ export default function VendorAddProductScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Product Details */}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Product Details</Text>
 
@@ -234,7 +214,6 @@ export default function VendorAddProductScreen({ navigation }: any) {
           />
         </View>
 
-        {/* Category */}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Category</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -260,7 +239,6 @@ export default function VendorAddProductScreen({ navigation }: any) {
           </ScrollView>
         </View>
 
-        {/* Submit Button */}
         <TouchableOpacity
           style={[styles.submitBtn, { backgroundColor: colors.primary }, loading && styles.submitBtnDisabled]}
           onPress={addProduct}
